@@ -1,23 +1,22 @@
 export function createLock(concurrency: number) {
     const pending: ((count: number) => void)[] = [];
-
-    let count = 0;
     return {
+        count: 0,
         async acquire(): Promise<number> {
-            if (count >= concurrency) {
+            if (this.count >= concurrency) {
                 return await new Promise<number>(resolve => pending.push(resolve));
             }
 
-            return count++;
+            return this.count++;
         },
 
         release() {
             if (pending.length) {
-                pending.shift()!(count);
-                return count;
+                pending.shift()!(this.count);
+                return this.count;
             }
 
-            return count--;
+            return this.count--;
         }
     };
 }

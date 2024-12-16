@@ -58,6 +58,6 @@ jobs:
 
       - uses: bacongobbler/azure-blob-storage-upload@main
         with:
-          source_dir: seicons
+          connection_string: ${{ secrets.STORAGE_CONNECTION_STRING }}
           container_name: $web
-          sas_token: ${{ secrets.STORAGE_SAS_TOKEN }}
+          source_dir: seicons

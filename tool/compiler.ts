@@ -12,42 +12,12 @@ import { catchFileNotFound } from './fs.js';
 import { ToolConfig } from './config.js';
 
 export async function compile(sources: IconSource[], config: ToolConfig, oncompilation: (compilation: CompilationResult) => void): Promise<CompilationResult[]> {
-    const compile = async (source: IconSource): Promise<CompilationResult> => {
-        return new Promise((resolve, reject) => {
-            const logger = config.logger?.createLogger(`compile[${source.path}]`);
-            const worker = new Worker(import.meta.filename, {
-                name: `compile[${source.path}]`,
-                workerData: {
-                    optimize: config.compilation.getOptimizeArgs(source),
-                    output: config.outputs.dist,
-                    source,
-                    vectorize: config.compilation.getVectorizeArgs(source),
-                },
-            });
-
-            worker.on('error', reject);
-            worker.on('exit', code => {
-                if (code !== 0) {
-                    return reject(new Error(`Worker exited with a non-zero exit code of '${code}'`));
-                }
-            });
-
-            worker.on('message', (message: WorkerMessage) => {
-                logger?.debug(`entered stage '${message.stage}', ` + (JSON.stringify(message.result) ?? ''));
-                if (message.stage === 'completed') {
-                    worker.terminate();
-                    return resolve(message.result!);
-                }
-            });
-        })
-    };
-
-    const lock = createLock(config.concurrency);
+    const lock = createLock(config.compilation.concurrency);
     return await Promise.all(
         sources.map(async source => {
             await lock.acquire();
             try {
-                return await compile(source);
+                return await (config.compilation.workers ? compileInWorker : compileInProcess)(source, config);
             } finally {
                 lock.release();
             }
@@ -58,15 +28,18 @@ export async function compile(sources: IconSource[], config: ToolConfig, oncompi
 };
 
 if (!isMainThread) {
-    const context: WorkerContext = {
-        data: <WorkerData>workerData,
-        stage: 'started',
+    const context: CompilationContext = {
+        data: <CompilationData>workerData,
         post(stage: CompilationStage, result?: CompilationResult) {
             this.stage = stage;
             parentPort?.postMessage({ result, stage });
         }
     };
 
+    await compileCore(context);
+}
+
+async function compileCore(context: CompilationContext): Promise<void> {
     const start = performance.now();
     context.post('started');
 
@@ -112,9 +85,57 @@ if (!isMainThread) {
             stage: context.stage ?? 'started',
         });
     }
+};
+
+async function compileInProcess(source: IconSource, config: ToolConfig): Promise<CompilationResult> {
+    const logger = config.logger?.createLogger(`compile[${source.path}]`);
+    return new Promise((resolve) => compileCore({
+        data: createCompilationData(source, config),
+        post(stage, result) {
+            logger?.debug(`entered stage '${stage}', ` + (JSON.stringify(result) ?? ''));
+
+            if ((this.stage = stage) === 'completed') {
+                resolve(result!);
+            }
+        },
+    }));
+};
+
+async function compileInWorker(source: IconSource, config: ToolConfig): Promise<CompilationResult> {
+    return new Promise((resolve, reject) => {
+        const logger = config.logger?.createLogger(`compile[${source.path}]`);
+        const worker = new Worker(import.meta.filename, {
+            name: `compile[${source.path}]`,
+            workerData: createCompilationData(source, config),
+        });
+
+        worker.on('error', reject);
+        worker.on('exit', code => {
+            if (code !== 0) {
+                return reject(new Error(`Worker exited with a non-zero exit code of '${code}'`));
+            }
+        });
+
+        worker.on('message', (message: WorkerMessage) => {
+            logger?.debug(`entered stage '${message.stage}', ` + (JSON.stringify(message.result) ?? ''));
+            if (message.stage === 'completed') {
+                worker.terminate();
+                return resolve(message.result!);
+            }
+        });
+    })
+};
+
+function createCompilationData(source: IconSource, config: ToolConfig): CompilationData {
+    return {
+        optimize: config.compilation.getOptimizeArgs(source),
+        output: config.outputs.dist,
+        source,
+        vectorize: config.compilation.getVectorizeArgs(source),
+    };
 }
 
-async function getAsVector(context: WorkerContext): Promise<string | undefined> {
+async function getAsVector(context: CompilationContext): Promise<string | undefined> {
     if (path.extname(context.data.source.path) == '.svg') {
         context.post('reading');
         return readFile(context.data.source.path, 'utf-8');
@@ -128,7 +149,7 @@ async function getAsVector(context: WorkerContext): Promise<string | undefined> 
 
     context.post('vectorizing');
     return await vectorize(file, context.data.vectorize);
-}
+};
 
 export type CompilationError = NodeJS.ErrnoException;
 export type CompilationResult = {
@@ -141,13 +162,13 @@ export type CompilationResult = {
 
 export type CompilationStage = 'started' | 'reading' | 'vectorizing' | 'optimizing' | 'writing' | 'completed';
 
-type WorkerContext = {
-    data: WorkerData;
+type CompilationContext = {
+    data: CompilationData;
     stage?: CompilationStage;
-    post(status: CompilationStage, result?: CompilationResult): void;
+    post(stage: CompilationStage, result?: CompilationResult): void;
 };
 
-type WorkerData = {
+type CompilationData = {
     optimize: SvgoConfig;
     output: string;
     source: IconSource;

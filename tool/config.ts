@@ -42,10 +42,11 @@ export async function readConfigJs(): Promise<ToolConfig> {
 
     const config: ToolConfig = {
         compilation: {
+            concurrency: builder.compilation?.concurrency ?? os.cpus().length,
+            workers: !!builder.compilation?.workers,
             getOptimizeArgs: builder.compilation?.getOptimizeArgs ? builder.compilation.getOptimizeArgs : getOptimizeArgs,
             getVectorizeArgs: builder.compilation?.getVectorizeArgs ? builder.compilation.getVectorizeArgs : getVectorizeArgs,
         },
-        concurrency: builder.concurrency ?? os.cpus().length,
         outputs: {
             dist: toAbsolutePath(builder.outputs?.dist ?? './dist'),
             obj: toAbsolutePath(builder.outputs?.dist ?? './obj'),
@@ -80,10 +81,11 @@ export async function readConfigJs(): Promise<ToolConfig> {
 
 export type ToolConfigBuilder = {
     compilation?: {
+        concurrency?: number;
+        workers?: boolean;
         getOptimizeArgs?(source: IconSource): SvgoConfig;
         getVectorizeArgs?(source: IconSource): VectorizeConfig;
     };
-    concurrency?: number;
     logging?: {
         level?: LogLevel;
         loggers?: { console?: boolean; file?: boolean | string; };
@@ -105,10 +107,11 @@ export type ToolConfigBuilder = {
 
 export type ToolConfig = {
     compilation: {
+        concurrency: number;
+        workers: boolean;
         getOptimizeArgs(source: IconSource): SvgoConfig;
         getVectorizeArgs(source: IconSource): VectorizeConfig;
     },
-    concurrency: number;
     logger?: ILogger;
     outputs: {
         dist: string;

@@ -6,7 +6,7 @@ import path from 'path';
 import { compile, CompilationResult, } from './compiler.js';
 import { getSourceAssets, IconSourceMap } from './sources.js';
 import { readConfigJs, ToolConfig } from './config.js';
-import { generate } from './generator.js';
+import { generate, GenerationResult } from './generator.js';
 
 await (async () => {
     const config = await readConfigJs();
@@ -32,12 +32,13 @@ await (async () => {
     config.logger?.debug(`Discovered '${sources.length}' sources`);
     console.log(`Discovered ${ansi.bold(ansi.cyan(`${sources.length}`))} sources, starting compile:`);
 
+    let start = performance.now();
     const compilations = await compile(sources, config, compilation => {
         if (compilation.error) {
             console.error(ansi.red(`${JSON.stringify(compilation, null, 2)}\n`));
         }
-    }).then(compilations => writeResultsJson(compilations, config)).then(compilations => {
-        const duration = dFormat(compilations.reduce((total, result) => total + result.duration, 0), { delimiter: ' and ', maxDecimalPoints: 2 });
+    }).then(compilations => {
+        const duration = dFormat(performance.now() - start, { delimiter: ' and ', maxDecimalPoints: 2 });
         const failures = compilations.reduce((count, result) => result.error ? count + 1 : count, 0);
 
         config.logger?.debug(`compile completed in '${duration}' (${compilations.length} results, ${failures} failures)`);
@@ -47,8 +48,9 @@ await (async () => {
     });
 
     console.log(`Generating Assets:`);
+    start = performance.now();
 
-    await generate(compilations, config, generation => {
+    const generations = await generate(compilations, config, generation => {
         if (generation.error) {
             console.error(ansi.red(`${JSON.stringify(generation, null, 2)}\n`));
             return;
@@ -56,13 +58,16 @@ await (async () => {
 
         console.log(`${ansi.green(generation.path)}`);
     }).then(generations => {
-        const duration = dFormat(generations.reduce((total, result) => total + result.duration, 0), { delimiter: ' and ', maxDecimalPoints: 2 });
+        const duration = dFormat(performance.now() - start, { delimiter: ' and ', maxDecimalPoints: 2 });
         const failures = generations.reduce((count, result) => result.error ? count + 1 : count, 0);
 
         config.logger?.debug(`generate completed in '${duration}' (${generations.length} results, ${failures} failures)`);
         console.log(`\nGenerated ${ansi.green(ansi.bold(`${generations.length - failures}`))} assets in ${duration}, with ${ansi.red(ansi.bold(`${failures}`))} failure(s)`);
+
+        return generations;
     });
 
+    await writeResultsJson(compilations, generations, config);
     if (config.logger) {
         await config.logger.flush();
     }
@@ -70,15 +75,15 @@ await (async () => {
     console.log(`\n${ansi.bold('DONE!')}`);
 })();
 
-async function writeResultsJson(results: CompilationResult[], config: ToolConfig): Promise<CompilationResult[]> {
+async function writeResultsJson(compiled: CompilationResult[], generated: GenerationResult[], config: ToolConfig): Promise<CompilationResult[]> {
     const file = path.join(config.outputs.obj!, './results.json');
-    await outputJson(file, results, {
+    await outputJson(file, { compiled, generated }, {
         encoding: 'utf-8',
         spaces: 2,
     });
 
     config.logger?.debug(`wrote results data file: '${file}'`);
-    return results;
+    return compiled;
 };
 
 async function writeSourcesJson(sources: IconSourceMap, config: ToolConfig): Promise<IconSourceMap> {

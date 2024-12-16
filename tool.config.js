@@ -1,6 +1,8 @@
 /** @type {import('./tool/config').ToolConfigBuilder} */
 export default {
-    concurrency: 6,
+    compilation: {
+        concurrency: Infinity,
+    },
     logging: true,
     src: {
         path: './ref/Win98SE/SE98/',
