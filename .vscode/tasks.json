@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "npm",
+      "type": "process",
+      "args": [
+        "run",
+        "build"
+      ],
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "problemMatcher": "$tsc",
+      "isBuildCommand": true,
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

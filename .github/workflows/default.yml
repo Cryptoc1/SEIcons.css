@@ -1,0 +1,63 @@
+name: default
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: setup npm
+        uses: actions/setup-node@v4
+        with:
+          cache: npm
+          cache-dependency-path: ./package-lock.json
+          node-version: lts/*
+
+      - name: restore
+        run: npm ci
+
+      - name: run tool
+        run: npm run build && npm run exec
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: seicons
+          path: dist
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tool-obj
+          path: obj
+
+  deploy:
+    if: startsWith(github.ref, 'refs/heads/main')
+
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: seicons
+
+      - uses: bacongobbler/azure-blob-storage-upload@main
+        with:
+          source_dir: seicons
+          container_name: $web
+          sas_token: ${{ secrets.STORAGE_SAS_TOKEN }}

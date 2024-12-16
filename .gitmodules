@@ -1,0 +1,3 @@
+[submodule "ref/Win98SE"]
+	path = ref/Win98SE
+	url = https://github.com/nestoris/Win98SE.git
