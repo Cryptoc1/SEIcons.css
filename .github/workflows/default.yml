@@ -46,7 +46,7 @@ jobs:
           path: obj
 
   deploy:
-    if: startsWith(github.ref, 'refs/heads/main')
+    # if: startsWith(github.ref, 'refs/heads/main')
 
     needs: [build]
     runs-on: ubuntu-latest
