@@ -30,8 +30,11 @@ jobs:
       - name: restore
         run: npm ci
 
+      - name: build tool
+        run: npm run build
+
       - name: run tool
-        run: npm run build && npm run exec
+        run: npm run exec
 
       - name: upload artifact
         uses: actions/upload-artifact@v4
@@ -55,9 +58,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: seicons
+          path: dist
 
       - uses: bacongobbler/azure-blob-storage-upload@main
         with:
           connection_string: ${{ secrets.STORAGE_CONNECTION_STRING }}
           container_name: $web
-          source_dir: seicons
+          source_dir: dist
