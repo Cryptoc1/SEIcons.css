@@ -64,4 +64,7 @@ jobs:
         with:
           connection_string: ${{ secrets.STORAGE_CONNECTION_STRING }}
           container_name: $web
+          overwrite: true
+          sync: true
           source_dir: dist
+

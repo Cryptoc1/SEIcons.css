@@ -11,7 +11,7 @@
     "exec": "node bin/index.js"
   },
   "type": "module",
-  "version": "1.0.0-rc.0",
+  "version": "1.0.0-rc.2",
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
     "@types/fs-extra": "^11.0.4",

@@ -14,8 +14,7 @@ export default {
                 return true;
             }
 
-            // return false;
-            return source.category !== 'stock';
+            return false;
         }
     },
     stylesheet: {
