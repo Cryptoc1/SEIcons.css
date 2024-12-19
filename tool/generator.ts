@@ -1,13 +1,14 @@
 import autoprefixer from 'autoprefixer';
 import cssnano from 'cssnano';
+import cssheader from 'postcss-header';
 import HtmlMinifier from 'html-minifier-terser';
-import { outputFile } from 'fs-extra/esm';
+import { outputFile, outputJson } from 'fs-extra/esm';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import postcss, { Result as PostCssResult, Root as PostCssRoot } from 'postcss';
 
 import { CompilationResult } from './compiler.js';
-import { Icon } from './icon.js';
+import { Icon, IconManifest } from './icon.js';
 import { ToolConfig } from './config.js';
 
 export async function generate(compilations: CompilationResult[], config: ToolConfig, ongeneration: (generation: GenerationResult) => void): Promise<GenerationResult[]> {
@@ -59,7 +60,6 @@ export async function generate(compilations: CompilationResult[], config: ToolCo
         });
 
         logger?.debug(`generated stylesheet map at '${file}'`);
-
         const result: GenerationResult = {
             duration: performance.now() - start,
             path: file
@@ -77,7 +77,6 @@ export async function generate(compilations: CompilationResult[], config: ToolCo
         });
 
         logger?.debug(`generated preview html at '${file}'`);
-
         const result: GenerationResult = {
             duration: performance.now() - start,
             path: file
@@ -85,9 +84,39 @@ export async function generate(compilations: CompilationResult[], config: ToolCo
 
         results.push(result);
         ongeneration(result);
+    })(),
+    (async () => {
+        const start = performance.now();
+
+        const file = path.resolve(config.outputs.dist, `${config.stylesheet.name}.manifest.json`);
+        await outputJson(file, createIconManifest(sources), {
+            encoding: 'utf-8'
+        });
+
+        logger?.debug(`generated manifest at '${file}'`);
+        const result: GenerationResult = {
+            duration: performance.now() - start,
+            path: file,
+        };
+
+        results.push(result);
+        ongeneration(result);
     })()]);
 
     return results;
+};
+
+function createIconManifest(icons: Icon[]): IconManifest {
+    return icons.reduce((manifest, icon) => {
+        const category = manifest[icon.category] ??= {};
+        category[icon.name] = {
+            category: icon.category,
+            name: icon.name,
+            path: `${icon.category}/${icon.name}.svg`,
+        };
+
+        return manifest;
+    }, <IconManifest>{});
 };
 
 async function createPreviewHtml(icons: Icon[], config: ToolConfig): Promise<string> {
@@ -137,12 +166,18 @@ async function createPreviewHtml(icons: Icon[], config: ToolConfig): Promise<str
 async function createStyleSheet(icons: Icon[], config: ToolConfig): Promise<PostCssResult<PostCssRoot>> {
     const getVariableName = (icon: Icon) => `--${config.stylesheet.variablePrefix}-${icon.category}-${icon.name}-url`;
     const createVariable = (icon: Icon) => `${getVariableName(icon)}: url('${icon.category}/${icon.name}.svg');`;
-    const createRule = (icon: Icon) => `i[data-${config.stylesheet.variablePrefix}="${icon.category}/${icon.name}"] {
-    background-image: var(${getVariableName(icon)}); 
-    color: transparent;
-}`;
+    const createRule = (icon: Icon) => `i[data-${config.stylesheet.variablePrefix}="${icon.category}/${icon.name}"] { background-image: var(${getVariableName(icon)}); }`;
 
-    return postcss([autoprefixer, cssnano]).process(`:root {
+    const plugins = [
+        autoprefixer(),
+        cssnano()];
+
+    if (config.stylesheet.header) {
+        // @ts-ignore
+        plugins.push(cssheader({ header: `/*! ${config.stylesheet.header} */` }));
+    }
+
+    return postcss(plugins).process(`:root {
     ${icons.map(createVariable).join('\n\t')}
 }
 

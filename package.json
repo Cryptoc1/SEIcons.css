@@ -1,19 +1,24 @@
 {
-  "author": "Escape Developers LLC",
+  "author": "@cryptoc1",
   "name": "seicons.css",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cryptoc1/SEIcons.css.git"
+  },
   "scripts": {
     "build": "npx tsc",
     "exec": "node bin/index.js"
   },
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.0",
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/html-minifier-terser": "^7.0.2",
     "@types/humanize-duration": "^3.27.4",
     "@types/node": "^22.10.2",
+    "@types/postcss-header": "^2.0.4",
     "serve": "^14.2.4",
     "typescript": "^5.7.2"
   },
@@ -27,6 +32,7 @@
     "html-minifier-terser": "^7.2.0",
     "humanize-duration": "^3.32.1",
     "postcss": "^8.4.49",
+    "postcss-header": "^3.0.3",
     "svgo": "^3.3.2"
   }
 }

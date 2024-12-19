@@ -1,3 +1,5 @@
+import seicons from './package.json' with { type: 'json' };
+
 /** @type {import('./tool/config').ToolConfigBuilder} */
 export default {
     compilation: {
@@ -12,10 +14,12 @@ export default {
                 return true;
             }
 
-            return false;
+            // return false;
+            return source.category !== 'stock';
         }
     },
     stylesheet: {
+        header: `${seicons.name} v${seicons.version} [${new Date().toISOString()}] (${seicons.repository.url}) <${seicons.author}>`,
         name: 'seicons',
         variablePrefix: 'seicon',
     },

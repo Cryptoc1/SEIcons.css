@@ -56,6 +56,7 @@ export async function readConfigJs(): Promise<ToolConfig> {
             path: typeof builder.src === 'string' ? toAbsolutePath(builder.src) : toAbsolutePath(builder.src.path),
         },
         stylesheet: {
+            header: builder.stylesheet.header,
             name: builder.stylesheet.name,
             variablePrefix: builder.stylesheet.variablePrefix ?? builder.stylesheet.name,
         }
@@ -100,6 +101,7 @@ export type ToolConfigBuilder = {
         exclude?(source: IconSource): boolean;
     };
     stylesheet: {
+        header?: string;
         name: string;
         variablePrefix?: string;
     };
@@ -122,6 +124,7 @@ export type ToolConfig = {
         exclude(source: IconSource): boolean;
     };
     stylesheet: {
+        header?: string;
         name: string;
         variablePrefix: string;
     };
