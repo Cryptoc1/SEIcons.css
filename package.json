@@ -23,7 +23,7 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "@neplex/vectorizer": "^0.0.4",
+    "@neplex/vectorizer": "^0.0.5",
     "ansi-colors": "^4.1.3",
     "autoprefixer": "^10.4.20",
     "cssnano": "^7.0.6",
