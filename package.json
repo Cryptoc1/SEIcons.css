@@ -20,7 +20,7 @@
     "@types/node": "^22.10.5",
     "@types/postcss-header": "^2.0.4",
     "serve": "^14.2.4",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
     "@neplex/vectorizer": "^0.0.5",
