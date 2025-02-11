@@ -31,7 +31,7 @@
     "glob": "^11.0.1",
     "html-minifier-terser": "^7.2.0",
     "humanize-duration": "^3.32.1",
-    "postcss": "^8.5.1",
+    "postcss": "^8.5.2",
     "postcss-header": "^3.0.3",
     "svgo": "^3.3.2"
   }
