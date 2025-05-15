@@ -11,27 +11,27 @@
     "exec": "node bin/index.js"
   },
   "type": "module",
-  "version": "1.0.0-rc.3",
+  "version": "1.0.0-rc.4",
   "devDependencies": {
-    "@tsconfig/node22": "^22.0.0",
+    "@tsconfig/node22": "^22.0.1",
     "@types/fs-extra": "^11.0.4",
     "@types/html-minifier-terser": "^7.0.2",
     "@types/humanize-duration": "^3.27.4",
-    "@types/node": "^22.10.6",
+    "@types/node": "^22.15.8",
     "@types/postcss-header": "^2.0.4",
     "serve": "^14.2.4",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@neplex/vectorizer": "^0.0.5",
     "ansi-colors": "^4.1.3",
-    "autoprefixer": "^10.4.20",
-    "cssnano": "^7.0.6",
-    "fs-extra": "^11.2.0",
-    "glob": "^11.0.1",
+    "autoprefixer": "^10.4.21",
+    "cssnano": "^7.0.7",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.2",
     "html-minifier-terser": "^7.2.0",
-    "humanize-duration": "^3.32.1",
-    "postcss": "^8.5.1",
+    "humanize-duration": "^3.32.2",
+    "postcss": "^8.5.3",
     "postcss-header": "^3.0.3",
     "svgo": "^3.3.2"
   }
