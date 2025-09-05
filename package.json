@@ -19,7 +19,7 @@
     "@types/humanize-duration": "^3.27.4",
     "@types/node": "^22.16.0",
     "@types/postcss-header": "^2.0.4",
-    "serve": "^14.2.4",
+    "serve": "^14.2.5",
     "typescript": "^5.8.3"
   },
   "dependencies": {
