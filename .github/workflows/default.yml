@@ -37,13 +37,13 @@ jobs:
         run: npm run exec
 
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: seicons
           path: dist
 
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: tool-obj
           path: obj
